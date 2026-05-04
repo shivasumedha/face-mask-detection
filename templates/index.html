@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Mask Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="card">
+
+    <h1>😷 Smart Mask Detection</h1>
+
+    <!-- Mode Switch -->
+    <div class="mode">
+        <button onclick="showUpload()">📤 Upload</button>
+        <button onclick="showLive()">🎥 Live</button>
+    </div>
+
+    <!-- Upload Section -->
+    <div id="uploadBox">
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file">
+            <button type="submit">Upload</button>
+        </form>
+
+        {% if image %}
+            <img src="{{ url_for('static', filename=image) }}" class="preview">
+        {% endif %}
+
+        {% if result %}
+            <h2 class="{{ 'safe' if 'Mask' in result else 'danger' }}">{{ result }}</h2>
+        {% endif %}
+    </div>
+
+    <!-- Live Section -->
+    <div id="liveBox" style="display:none;">
+        <div class="buttons">
+            <button onclick="startCamera()">Start</button>
+            <button onclick="capture()">📸 Detect</button>
+            <button onclick="stopCamera()">Stop</button>
+        </div>
+
+        <img id="video" class="preview" style="display:none;">
+        <h2 id="liveResult"></h2>
+    </div>
+
+</div>
+
+<script>
+// Mode Switch
+function showUpload(){
+    document.getElementById("uploadBox").style.display="block";
+    document.getElementById("liveBox").style.display="none";
+}
+
+function showLive(){
+    document.getElementById("uploadBox").style.display="none";
+    document.getElementById("liveBox").style.display="block";
+}
+
+// Camera
+function startCamera(){
+    let v=document.getElementById("video");
+    v.src="/video";
+    v.style.display="block";
+}
+
+function stopCamera(){
+    let v=document.getElementById("video");
+    v.src="";
+    v.style.display="none";
+}
+
+// Detect
+function capture(){
+    fetch("/capture")
+    .then(res=>res.json())
+    .then(data=>{
+        let r=document.getElementById("liveResult");
+        r.innerText=data.result;
+
+        if(data.result.includes("No Mask")){
+            r.className="danger";
+            new Audio("/static/alert.mp3").play();
+        }else{
+            r.className="safe";
+            new Audio("/static/alright.mp3").play();
+        }
+    });
+}
+</script>
+
+</body>
+</html>
